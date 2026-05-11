@@ -1,19 +1,19 @@
 """
 Log Analyzer Module
 ====================
-This module handles all communication with the Google Gemini API.
-Gemini has a FREE tier — no credit card needed, just a Google account.
+This module handles all communication with the Groq API.
+Groq has a FREE tier — no credit card needed, just a Google/GitHub account.
 
 HOW TO GET YOUR FREE API KEY:
-1. Go to https://aistudio.google.com
-2. Sign in with your Google account
-3. Click "Get API Key" → "Create API key"
+1. Go to https://console.groq.com
+2. Sign in with your Google or GitHub account
+3. Click "API Keys" in the left sidebar → "Create API Key"
 4. Copy and paste it into your .env file
 
 KEY CONCEPTS FOR BEGINNERS:
-- We send the log content to Gemini as a "prompt"
-- We ask Gemini to respond in JSON format so we can easily parse it
-- The free tier allows 15 requests per minute — more than enough
+- We send the log content to Groq as a "prompt"
+- We ask the model to respond in JSON format so we can easily parse it
+- The free tier allows 30 requests per minute — more than enough
 """
 
 import os
@@ -24,13 +24,13 @@ import urllib.error
 # ─── Configuration ────────────────────────────────────────────────────────────
 
 # Read the API key from the .env file (loaded by app.py via python-dotenv)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Gemini API endpoint — we use the free gemini-1.5-flash model
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.0-flash:generateContent?key=" + (GEMINI_API_KEY or "")
-)
+# Groq API endpoint
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+# Model to use — llama-3.3-70b-versatile is free and very capable
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # Maximum characters to send — keeps responses fast and within free limits
 MAX_LOG_CHARS = 12000
@@ -40,7 +40,7 @@ MAX_LOG_CHARS = 12000
 
 def analyze_logs(log_content: str) -> dict:
     """
-    Send log content to Gemini and return structured analysis.
+    Send log content to Groq and return structured analysis.
 
     Parameters:
         log_content (str): The raw text content of the uploaded log file
@@ -50,8 +50,8 @@ def analyze_logs(log_content: str) -> dict:
     """
 
     # ── Step 1: Check that the API key is set ──
-    if not GEMINI_API_KEY:
-        return {'error': 'GEMINI_API_KEY not found. Please add it to your .env file.'}
+    if not GROQ_API_KEY:
+        return {'error': 'GROQ_API_KEY not found. Please add it to your .env file.'}
 
     # ── Step 2: Trim the log if it's too long ──
     # We take the LAST portion because recent logs are usually most relevant
@@ -62,7 +62,6 @@ def analyze_logs(log_content: str) -> dict:
         truncated = False
 
     # ── Step 3: Build the prompt ──
-    # We give Gemini clear instructions + the log content in one message
     prompt = f"""You are an expert DevOps engineer and log analysis specialist.
 Analyze the application logs below and respond with ONLY a valid JSON object.
 No extra text, no markdown fences, no explanation — just the raw JSON.
@@ -114,46 +113,44 @@ Rules:
 Respond with ONLY the JSON object."""
 
     # ── Step 4: Build the request payload ──
-    # Gemini expects a specific JSON structure
+    # Groq uses the OpenAI-compatible chat completions format
     payload = {
-        "contents": [
+        "model": GROQ_MODEL,
+        "messages": [
             {
-                "parts": [
-                    {"text": prompt}
-                ]
+                "role": "user",
+                "content": prompt
             }
         ],
-        "generationConfig": {
-            "temperature": 0.3,        # Lower = more consistent/factual
-            "maxOutputTokens": 2000    # Limit response length
-        }
+        "temperature": 0.3,        # Lower = more consistent/factual
+        "max_tokens": 2000         # Limit response length
     }
 
-    # ── Step 5: Send the HTTP request to Gemini ──
-    # We use urllib (built into Python) so no extra library is needed
+    # ── Step 5: Send the HTTP request to Groq ──
     try:
         payload_bytes = json.dumps(payload).encode('utf-8')
 
         req = urllib.request.Request(
-            GEMINI_URL,
+            GROQ_URL,
             data=payload_bytes,
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {GROQ_API_KEY}"
+            },
             method="POST"
         )
 
         with urllib.request.urlopen(req, timeout=30) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
-        # ── Step 6: Extract the text from Gemini's response ──
-        # Gemini wraps the reply in a nested structure
-        raw_text = response_data["candidates"][0]["content"]["parts"][0]["text"]
+        # ── Step 6: Extract the text from Groq's response ──
+        # Groq uses the OpenAI response format
+        raw_text = response_data["choices"][0]["message"]["content"]
 
-        # Clean up any accidental markdown fences Gemini might add
+        # Clean up any accidental markdown fences the model might add
         raw_text = raw_text.strip()
         if raw_text.startswith("```"):
-            # Remove opening fence (```json or ```)
             raw_text = raw_text.split("\n", 1)[1] if "\n" in raw_text else raw_text[3:]
-            # Remove closing fence
             if raw_text.endswith("```"):
                 raw_text = raw_text[:-3]
 
@@ -163,13 +160,11 @@ Respond with ONLY the JSON object."""
         # ── Step 8: Add metadata ──
         analysis['truncated'] = truncated
         analysis['chars_analyzed'] = len(log_content)
-        # Gemini free tier doesn't always return token counts, so we estimate
-        analysis['tokens_used'] = len(prompt.split()) * 2
+        analysis['tokens_used'] = response_data.get("usage", {}).get("total_tokens", 0)
 
         return {'analysis': analysis}
 
     except urllib.error.HTTPError as e:
-        # Read the error body for a helpful message
         error_body = e.read().decode('utf-8', errors='replace')
         try:
             error_json = json.loads(error_body)
@@ -179,12 +174,12 @@ Respond with ONLY the JSON object."""
 
         if e.code == 400:
             return {'error': f'Bad request: {message}'}
-        elif e.code == 403:
-            return {'error': 'Invalid API key. Check your GEMINI_API_KEY in .env'}
+        elif e.code == 401:
+            return {'error': 'Invalid API key. Check your GROQ_API_KEY in .env'}
         elif e.code == 429:
-            return {'error': f'Quota/rate limit error: {message}'}  
+            return {'error': f'Rate limit hit. Wait a moment and try again. ({message})'}
         else:
-            return {'error': f'Gemini API error {e.code}: {message}'}
+            return {'error': f'Groq API error {e.code}: {message}'}
 
     except json.JSONDecodeError as e:
         return {'error': 'AI returned unexpected format. Please try again.'}
