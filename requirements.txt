@@ -8,5 +8,5 @@ flask==3.0.2
 python-dotenv==1.0.1
 
 # NOTE: No extra AI library needed!
-# We call the Gemini API directly using Python's built-in urllib.
+# We call the Groq API directly using Python's built-in urllib.
 # This means fewer things to install and fewer things to break.

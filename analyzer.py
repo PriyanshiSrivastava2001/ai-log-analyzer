@@ -122,8 +122,8 @@ Respond with ONLY the JSON object."""
                 "content": prompt
             }
         ],
-        "temperature": 0.3,        # Lower = more consistent/factual
-        "max_tokens": 2000         # Limit response length
+        "temperature": 0.3,
+        "max_tokens": 2000
     }
 
     # ── Step 5: Send the HTTP request to Groq ──
