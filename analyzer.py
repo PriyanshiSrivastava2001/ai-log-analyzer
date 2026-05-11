@@ -182,7 +182,7 @@ Respond with ONLY the JSON object."""
         elif e.code == 403:
             return {'error': 'Invalid API key. Check your GEMINI_API_KEY in .env'}
         elif e.code == 429:
-            return {'error': 'Rate limit hit. Wait 1 minute and try again (free tier: 15 req/min)'}
+    return {'error': f'Quota/rate limit error: {message}'}  
         else:
             return {'error': f'Gemini API error {e.code}: {message}'}
 
