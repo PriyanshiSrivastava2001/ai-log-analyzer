@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Log Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">LogAI</span>
+        <span class="logo-badge">Analyzer</span>
+      </div>
+      <div class="header-meta">
+        <span class="status-dot"></span>
+        <span class="status-text">GPT-4o mini</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       HERO / UPLOAD SECTION
+  ════════════════════════════════════════════════ -->
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="hero-eyebrow">AI-Powered Diagnostics</p>
+        <h1 class="hero-title">Understand your logs<br><em>instantly.</em></h1>
+        <p class="hero-subtitle">
+          Upload any application log file and get AI-generated error summaries,
+          root cause analysis, and step-by-step fixes in seconds.
+        </p>
+      </div>
+    </section>
+
+    <section class="upload-section">
+      <div class="container">
+
+        <!-- Upload Card -->
+        <div class="upload-card" id="uploadCard">
+          <div class="upload-zone" id="dropZone">
+            <div class="upload-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p class="upload-primary">Drop your log file here</p>
+            <p class="upload-secondary">or <label for="fileInput" class="file-label">browse to upload</label></p>
+            <p class="upload-hint">.txt or .log files · max 2 MB</p>
+            <input type="file" id="fileInput" accept=".txt,.log" hidden />
+          </div>
+
+          <!-- Selected file preview -->
+          <div class="file-preview" id="filePreview" style="display:none">
+            <div class="file-icon">📄</div>
+            <div class="file-info">
+              <span class="file-name" id="fileName"></span>
+              <span class="file-size" id="fileSize"></span>
+            </div>
+            <button class="file-remove" id="removeFile" title="Remove">✕</button>
+          </div>
+
+          <button class="btn-analyze" id="analyzeBtn" disabled>
+            <span class="btn-text">Analyze Logs</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- Sample logs -->
+        <div class="samples">
+          <p class="samples-label">Try a sample:</p>
+          <div class="samples-list">
+            <button class="sample-btn" data-sample="django_error">Django App</button>
+            <button class="sample-btn" data-sample="nginx_access">Nginx Server</button>
+            <button class="sample-btn" data-sample="database_error">PostgreSQL DB</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════
+         LOADING STATE
+    ════════════════════════════════════════════════ -->
+    <section class="loading-section" id="loadingSection" style="display:none">
+      <div class="container">
+        <div class="loading-card">
+          <div class="loader-ring">
+            <div class="ring-segment"></div>
+            <div class="ring-segment"></div>
+            <div class="ring-segment"></div>
+          </div>
+          <div class="loading-steps">
+            <div class="loading-step active" id="step1">
+              <span class="step-dot"></span>
+              <span>Parsing log file</span>
+            </div>
+            <div class="loading-step" id="step2">
+              <span class="step-dot"></span>
+              <span>Sending to AI</span>
+            </div>
+            <div class="loading-step" id="step3">
+              <span class="step-dot"></span>
+              <span>Generating analysis</span>
+            </div>
+            <div class="loading-step" id="step4">
+              <span class="step-dot"></span>
+              <span>Building report</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════
+         RESULTS SECTION
+    ════════════════════════════════════════════════ -->
+    <section class="results-section" id="resultsSection" style="display:none">
+      <div class="container">
+
+        <!-- Results header with health score -->
+        <div class="results-header">
+          <div>
+            <h2 class="results-title">Analysis Report</h2>
+            <p class="results-meta" id="resultsMeta"></p>
+          </div>
+          <div class="health-score-wrap">
+            <div class="health-score" id="healthScore">
+              <svg class="score-ring" viewBox="0 0 80 80">
+                <circle class="ring-bg" cx="40" cy="40" r="32"/>
+                <circle class="ring-fill" id="scoreRing" cx="40" cy="40" r="32"/>
+              </svg>
+              <span class="score-number" id="scoreNumber">--</span>
+            </div>
+            <p class="score-label">Health Score</p>
+          </div>
+        </div>
+
+        <!-- Summary banner -->
+        <div class="summary-card" id="summaryCard">
+          <div class="summary-header">
+            <span class="summary-icon">📋</span>
+            <span class="summary-label">Summary</span>
+            <span class="severity-badge" id="severityBadge"></span>
+          </div>
+          <p class="summary-text" id="summaryText"></p>
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-number" id="errorCount">0</span>
+              <span class="stat-label">Errors</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number" id="warningCount">0</span>
+              <span class="stat-label">Warnings</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid: Critical Issues + Root Causes -->
+        <div class="results-grid">
+
+          <!-- Critical Issues -->
+          <div class="result-card">
+            <h3 class="card-title">
+              <span class="card-icon">🔴</span>
+              Critical Issues
+            </h3>
+            <div id="criticalIssuesList"></div>
+          </div>
+
+          <!-- Root Cause Analysis -->
+          <div class="result-card">
+            <h3 class="card-title">
+              <span class="card-icon">🔍</span>
+              Root Cause Analysis
+            </h3>
+            <div id="rootCausesList"></div>
+          </div>
+
+        </div>
+
+        <!-- Suggested Fixes -->
+        <div class="result-card full-width">
+          <h3 class="card-title">
+            <span class="card-icon">🛠️</span>
+            Suggested Fixes
+          </h3>
+          <div id="fixesList"></div>
+        </div>
+
+        <!-- Patterns -->
+        <div class="result-card full-width">
+          <h3 class="card-title">
+            <span class="card-icon">📊</span>
+            Patterns &amp; Observations
+          </h3>
+          <ul id="patternsList" class="patterns-list"></ul>
+        </div>
+
+        <!-- Analyze another -->
+        <div class="analyze-again">
+          <button class="btn-again" id="analyzeAgainBtn">
+            ← Analyze Another File
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Error banner (hidden by default) -->
+    <div class="error-banner" id="errorBanner" style="display:none">
+      <span class="error-icon">⚠️</span>
+      <span id="errorText"></span>
+      <button class="error-close" id="errorClose">✕</button>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>Built with Python · Flask · OpenAI API</span>
+      <span class="footer-sep">·</span>
+      <span>Beginner-Friendly Project</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

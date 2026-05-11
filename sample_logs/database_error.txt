@@ -1,0 +1,28 @@
+2024-03-15 10:00:00.001 UTC [1] LOG:  database system was shut down at 2024-03-15 09:59:58 UTC
+2024-03-15 10:00:00.100 UTC [1] LOG:  entering standby mode
+2024-03-15 10:00:01.200 UTC [1] LOG:  database system is ready to accept read only connections
+2024-03-15 10:00:05.300 UTC [2345] LOG:  connection received: host=10.0.1.10 port=54321
+2024-03-15 10:00:05.350 UTC [2345] LOG:  connection authorized: user=appuser database=production
+2024-03-15 10:00:10.400 UTC [2346] WARNING:  there is already a transaction in progress
+2024-03-15 10:00:12.500 UTC [2347] ERROR:  duplicate key value violates unique constraint "users_email_key"
+2024-03-15 10:00:12.500 UTC [2347] DETAIL:  Key (email)=(john@example.com) already exists.
+2024-03-15 10:00:12.501 UTC [2347] STATEMENT:  INSERT INTO users (email, name, created_at) VALUES ($1, $2, NOW())
+2024-03-15 10:00:15.600 UTC [1] LOG:  checkpoint starting: time
+2024-03-15 10:00:18.200 UTC [2348] ERROR:  deadlock detected
+2024-03-15 10:00:18.200 UTC [2348] DETAIL:  Process 2348 waits for ShareLock on transaction 7291; blocked by process 2349.
+2024-03-15 10:00:18.200 UTC [2348] DETAIL:  Process 2349 waits for ShareLock on transaction 7290; blocked by process 2348.
+2024-03-15 10:00:18.201 UTC [2348] HINT:   See server log for query details.
+2024-03-15 10:00:18.201 UTC [2348] CONTEXT: while updating tuple (0,42) in relation "orders"
+2024-03-15 10:00:20.000 UTC [2350] ERROR:  out of shared memory
+2024-03-15 10:00:20.001 UTC [2350] HINT:   You might need to increase max_locks_per_transaction.
+2024-03-15 10:00:22.300 UTC [1] LOG:  checkpoint complete: wrote 8193 buffers (50.0%); 0 WAL file(s) added, 0 removed, 2 recycled
+2024-03-15 10:00:25.000 UTC [2351] WARNING:  autovacuum: found orphan temp table "pg_toast_2619" in database "production"
+2024-03-15 10:00:27.100 UTC [2352] ERROR:  could not resize shared memory segment "/PostgreSQL.1234" to 536936448 bytes: No space left on device
+2024-03-15 10:00:27.102 UTC [1] LOG:  server process (PID 2352) exited with exit code 1
+2024-03-15 10:00:27.103 UTC [1] DETAIL:  Failed process was running: VACUUM ANALYZE public.events
+2024-03-15 10:00:28.000 UTC [1] LOG:  terminating any other active server processes
+2024-03-15 10:00:28.001 UTC [1] WARNING:  terminating connection because of crash of another server process
+2024-03-15 10:00:28.500 UTC [1] LOG:  all server processes terminated; reinitializing
+2024-03-15 10:00:29.000 UTC [1] FATAL:  pre-existing shared memory block is still in use
+2024-03-15 10:00:29.001 UTC [1] HINT:   Check if there are any old server processes still running, and if not, remove the shared memory block.
+2024-03-15 10:00:30.000 UTC [1] LOG:  database system is shut down

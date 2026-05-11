@@ -1,0 +1,23 @@
+192.168.1.10 - - [15/Mar/2024:09:00:01 +0000] "GET /index.html HTTP/1.1" 200 5342 "-" "Mozilla/5.0"
+192.168.1.11 - - [15/Mar/2024:09:00:02 +0000] "GET /api/v1/users HTTP/1.1" 200 1820 "-" "curl/7.68.0"
+10.0.0.5 - - [15/Mar/2024:09:00:04 +0000] "POST /api/v1/login HTTP/1.1" 401 89 "-" "python-requests/2.28.0"
+10.0.0.5 - - [15/Mar/2024:09:00:04 +0000] "POST /api/v1/login HTTP/1.1" 401 89 "-" "python-requests/2.28.0"
+10.0.0.5 - - [15/Mar/2024:09:00:05 +0000] "POST /api/v1/login HTTP/1.1" 401 89 "-" "python-requests/2.28.0"
+10.0.0.5 - - [15/Mar/2024:09:00:05 +0000] "POST /api/v1/login HTTP/1.1" 401 89 "-" "python-requests/2.28.0"
+10.0.0.5 - - [15/Mar/2024:09:00:05 +0000] "POST /api/v1/login HTTP/1.1" 401 89 "-" "python-requests/2.28.0"
+10.0.0.5 - - [15/Mar/2024:09:00:06 +0000] "POST /api/v1/login HTTP/1.1" 429 62 "-" "python-requests/2.28.0"
+2024/03/15 09:00:06 [warn] 1234#0: *1001 upstream response time 2.834s while reading response header from upstream: 10.0.1.20:8080
+192.168.1.20 - - [15/Mar/2024:09:00:08 +0000] "GET /static/app.bundle.js HTTP/1.1" 200 834291 "-" "Mozilla/5.0"
+192.168.1.21 - - [15/Mar/2024:09:00:09 +0000] "GET /admin/ HTTP/1.1" 302 0 "-" "Mozilla/5.0"
+2024/03/15 09:00:10 [error] 1234#0: *1002 connect() failed (111: Connection refused) while connecting to upstream, upstream: "http://10.0.1.20:8080"
+2024/03/15 09:00:10 [error] 1234#0: *1002 no live upstreams while connecting to upstream, client: 192.168.1.30
+192.168.1.30 - - [15/Mar/2024:09:00:10 +0000] "GET /api/v1/products HTTP/1.1" 502 568 "-" "Mozilla/5.0"
+192.168.1.31 - - [15/Mar/2024:09:00:11 +0000] "GET /api/v1/products HTTP/1.1" 502 568 "-" "Mozilla/5.0"
+192.168.1.32 - - [15/Mar/2024:09:00:12 +0000] "GET /api/v1/products HTTP/1.1" 502 568 "-" "Mozilla/5.0"
+2024/03/15 09:00:12 [warn] 1234#0: *1003 upstream server temporarily disabled while reading response header from upstream
+2024/03/15 09:00:13 [error] 1234#0: *1004 SSL_do_handshake() failed (SSL: error:1408F10B) while SSL handshaking, client: 203.0.113.42
+192.168.1.40 - - [15/Mar/2024:09:00:14 +0000] "GET /api/v1/orders HTTP/1.1" 504 0 "-" "Mozilla/5.0"
+2024/03/15 09:00:14 [error] 1234#0: *1005 upstream timed out (110: Connection timed out) reading response header, upstream: "http://10.0.1.21:8080"
+192.168.1.10 - - [15/Mar/2024:09:00:15 +0000] "GET /index.html HTTP/1.1" 200 5342 "-" "Mozilla/5.0"
+2024/03/15 09:00:20 [warn] 1234#0: worker process 1240 exited with code 1
+2024/03/15 09:00:20 [notice] 1234#0: start worker process 1241
